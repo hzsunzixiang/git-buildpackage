@@ -1,0 +1,151 @@
+    <chapter id="gbp.special">
+    <title>Special use cases</title>
+    <sect1 id="gbp.special.dfsgfree">
+    <title>Handling non-DFSG clean upstream sources</title>
+    <para>If you have to handle non DFSG clean upstream sources you can use a
+    different branch which you have to create once:
+    </para>
+    <screen>
+&gitcmd; branch dfsg_clean upstream
+    </screen>
+    <para>
+    This creates the <emphasis>dfsg_clean</emphasis> branch from the tip of a
+    branch called <emphasis>upstream</emphasis>.  Then, when importing a new
+    upstream version, you import the new version on the
+    <option>upstream-branch</option> (by default named
+    <emphasis>upstream</emphasis>) as usual and just don't merge to the
+    <emphasis>debian-branch</emphasis>  (by default named
+    <emphasis>master</emphasis>):
+    </para>
+    <screen>
+&git-import-orig; --no-merge <filename>/path/to/nondfsg-clean-package_10.4.orig.tar.gz</filename>
+&gitcmd; <option>tag</option> 10.4
+    </screen>
+    <para>
+    After the import you can switch to the <emphasis>dfsg_clean</emphasis>
+    branch and get the newly imported changes from the upstream branch:
+    </para>
+    <screen>
+&gitcmd; <option>checkout</option> dfsg_clean
+&gitcmd; <option>pull</option> <filename>.</filename> upstream
+    </screen>
+    <para>Now make this checkout dfsg clean (preverably by a cleanup script), commit
+    your changes and merge to your <option>debian-branch</option>:</para>
+    <screen>
+cleanup-script.sh
+&gitcmd; commit -a -m "Make source dfsg clean"
+&gitcmd; tag <replaceable>10.4.dfsg</replaceable>
+&gitcmd; checkout <replaceable>master</replaceable>
+&gitcmd; pull <replaceable>.</replaceable> <replaceable>dfsg_clean</replaceable>
+    </screen>
+    </sect1>
+
+    <sect1 id="gbp.special.nmus">
+    <title>Importing NMUs</title>
+    <para>
+    First create a branch that holds the NMUs from the tip of your
+    <option>debian-branch</option> (default is <emphasis>master</emphasis>) once:
+    </para>
+    <screen>
+&gitcmd; <option>branch</option> <replaceable>nmu</replaceable> <replaceable>master</replaceable>
+    </screen>
+    <para>
+    To import an NMU change into the git repository and use &git-import-dsc;:
+    </para>
+    <screen>
+&gitcmd; checkout <replaceable>master</replaceable>
+&git-import-dsc; <option>--debian-branch</option>=<replaceable>nmu</replaceable> <filename>/path/to/package_1.0-1nmu0.dsc</filename>
+    </screen>
+    <para>
+    This will import the NMU onto the branched named <emphasis>nmu</emphasis>
+    instead of the default <option>master</option>. This method can also
+    be used to import "old" releases into the &git; repository when migrating
+    to &git; from another VCS.
+    </para>
+    </sect1>
+
+    <sect1 id="gbp.special.pbuilder">
+    <title>Using &pbuilder;</title>
+    <para>
+    Since &pbuilder; uses different command line arguments than
+    &debuild; and &dpkg-buildpackage; we can't simply pass the options on the
+    command line but have to wrap them in the <option>--git-builder</option>
+    option instead. <command>git-pbuilder</command> helps you with that:
+
+<programlisting>
+<command>git-buildpackage</command> <option>--git-builder="git-pbuilder"</option>  <option>--git-cleaner="fakeroot debian/rules clean"</option>
+</programlisting>
+
+    Note that we also used a different clean command since since &pdebuildcmd;
+    <option>clean</option> means something different than &debuildcmd;
+    <option>clean</option>.
+    
+    We can shorten this further by using <filename>~/.gbp.conf</filename>:
+
+<programlisting>
+cat &lt;&lt;EOF &gt; <filename>~/.gbp.conf</filename>
+[DEFAULT]
+# tell git-buildpackage howto clean the source tree
+cleaner = fakeroot debian/rules clean
+# this is how we invoke pbuilder, arguments passed to git-buildpackage will be
+# passed to dpkg-buildpackge in the chroot
+builder = /usr/bin/git-pbuilder
+</programlisting>
+
+	<command>git-pbuilder</command> defaults to building a package for the
+	<envar>sid</envar> distribution. If you want to build for another
+	distribution pass this in the <envar>DIST</envar> environment variable.
+
+	Invoking &git-buildpackage; will now invoke &pdebuildcmd; by
+	default and all additional command line arguments are passed to
+	<command>dpkg-buildpackage</command>. If you want to use
+	<command>debuild</command> again (without modifying
+	<filename>~/.gbp.conf</filename>) you can use:
+<programlisting>
+<command>git-buildpackage</command> --git-builder=debuild
+</programlisting>
+
+	Furthermore, if you don't want this for all your invocations of
+	&git-buildpackage; you can use <filename>.git/gbp.conf</filename> in
+	one of your &git; repositories instead of
+	<filename>~/.gbp.conf</filename>.
+    </para>
+    </sect1>
+
+    <sect1 id="gbp.special.hacking">
+    <title>Working on random packages</title>
+    <para>
+    Whenever you need to work on an arbitrary Debian package you can check it
+    right into &git; with one command:
+<programlisting>
+git-import-dsc --download <filename>package</filename>
+cd <filename>package</filename>
+git-branch debian
+</programlisting>
+    </para>
+    <para>
+    This uses <command>apt-get</command> to download the source package,
+    puts the orig tarball on the <option>upstream-branch</option> and the
+    Debian changes on the <option>debian-branch</option> (by default
+    <emphasis>master</emphasis>). The second command
+    creates a branch called <emphasis>debian</emphasis>. Now you can easily
+    modify the package, revert changes you made, create other branches for
+    testing, see what changes you made, etc..  When finished just do</para>
+<programlisting>
+git-commit -a
+git-diff debian --
+</programlisting>
+    <para>
+
+    to get a nice patch that can be submitted to the Debian BTS. You can also
+    fetch the source package from an URL:
+
+<programlisting>
+git-import-dsc --download <filename>http://mentors.debian.net/debian/pool/main/i/ipsec-tools/ipsec-tools_0.7.3-9.dsc</filename>
+</programlisting>
+
+   The import works incrementally, you can import new versions on top of
+   already imported ones for e.g. easy review of changes.
+    </para>
+    </sect1>
+</chapter>

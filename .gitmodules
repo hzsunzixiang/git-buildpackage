@@ -1,0 +1,3 @@
+[submodule "tests/component/deb/data"]
+	path = tests/component/deb/data
+	url = git://honk.sigxcpu.org/git/gbp/deb-testdata

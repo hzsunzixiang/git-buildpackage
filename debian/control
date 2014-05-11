@@ -1,0 +1,34 @@
+Source: git-buildpackage
+Section: vcs
+Priority: optional
+Maintainer: Guido Günther <agx@sigxcpu.org>
+Build-Depends: debhelper (>= 7.0.50~), python (>> 2.6.6-3~),
+ pychecker, gtk-doc-tools, sgml2x, docbook-utils, jade, python-dateutil,
+ python-nose,
+ python-nosexcover,
+ bash-completion, perl, python-epydoc, python-coverage, python-setuptools,
+# For the testsuite
+ git (>= 1:1.7.9.1-1~), bzip2, unzip, pristine-tar, devscripts
+Standards-Version: 3.9.3
+Vcs-Git: git://honk.sigxcpu.org/git/git-buildpackage.git
+Vcs-Browser: http://git.debian.org/?p=users/agx/git-buildpackage.git
+Homepage: https://honk.sigxcpu.org/piki/projects/git-buildpackage/
+X-Python-Version: >= 2.6
+
+Package: git-buildpackage
+Architecture: all
+Depends: ${python:Depends}, ${shlibs:Depends}, ${misc:Depends}, devscripts (>= 2.10.66~),
+ git (>= 1:1.7.9.1-1~), python-dateutil, man-db
+Recommends: pristine-tar (>= 0.5), cowbuilder
+Suggests: python-notify, unzip
+Description: Suite to help with Debian packages in Git repositories
+ This package contains the following tools:
+  * git-import-{dsc,dscs}: import existing Debian source packages into a git
+    repository
+  * git-import-orig: import a new upstream version into the git repository
+  * git-buildpackage: build a package out of a git repository, check for local
+    modifications and tag appropriately
+  * git-dch: generate Debian changelog entries from Git commit messages
+  * gbp-{pull,clone}: clone and pull from remote repos
+  * gbp-pq: manage debian/patches easily
+  * gbp-create-remote-repo: create remote repositories

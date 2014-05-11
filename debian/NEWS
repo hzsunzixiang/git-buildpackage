@@ -1,0 +1,44 @@
+git-buildpackage (0.4.61) unstable; urgency=low
+
+  In order to not override dpkg-buildpackge's defaults for 3.0 source packages
+  the default builder command is now "debuild -i -I" instead of "debuild
+  -i\.git/ -I.git". If you want to retain the old behaviour please adjust your
+  gbp.conf accordingly.
+
+ -- Guido Günther <agx@sigxcpu.org>  Sun, 22 Nov 2009 17:07:52 +0100
+
+git-buildpackage (0.4.57) unstable; urgency=low
+
+  git-import-orig dosn't generate changelog entries by default anymore. This
+  means you can safely remove --no-dch from all your scripts and config files.
+
+  If you want git-import-orig to behave as before add:
+     postimport = dch -v%(version)s New Upstream Version
+  to your gbp.conf. If you want to invoke git-dch instead, you can use:
+     postimport = git-dch -N%(version)s -S -a
+  The later is recommended since it creates git-dch compatible changelog
+  entries.
+
+ -- Guido Günther <agx@sigxcpu.org>  Sun, 23 Aug 2009 17:21:50 +0200
+
+git-buildpackage (0.3.3) unstable; urgency=low
+
+  As of this version git-buildpackage doesn't pass hardcoded '-i\.git -I.git'
+  to the build command specified via --git-builder (or via the builder config
+  file options). So if you're not using the default build command (which is
+  now 'debuild -i\.git -I.git' instead of just plain 'debuild') you'll have to
+  add these options to your build command in order to exclude git metadata
+  from your diffs and source tarballs.
+  This was done to make the invocation of the build command more flexible, we
+  don't rely on debuild behaviour from now on.
+  Again: if you didn't change the default build command, you don't have to
+  change anything.
+
+ -- Guido Guenther <agx@sigxcpu.org>  Mon, 20 Aug 2007 18:08:37 +0200
+
+git-buildpackage (0.2.25) unstable; urgency=low
+
+  Generated tags are now by default put into debian/ and upstream/ namespaces.
+  This doesn't have any effect on already existing tags.
+
+ -- Guido Guenther <agx@sigxcpu.org>  Fri,  2 Feb 2007 15:56:12 +0100
